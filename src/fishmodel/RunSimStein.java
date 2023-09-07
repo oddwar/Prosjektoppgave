@@ -36,7 +36,7 @@ import ucar.nc2.NetcdfFileWriteable;
  *
  * @author malv
  */
-public class RunSimulations {
+public class RunSimStein {
 
     public static final double HYPOXIA_THRESHOLD = 6;
 
@@ -88,8 +88,9 @@ public class RunSimulations {
         boolean useCurrentMagic = false; // Use spatially variable current flow field
         CurrentMagicFields cmf = null;
         if (useCurrentMagic) {
-            cmf = new CurrentMagicFields("C:/Users/alver/OneDrive - NTNU/prosjekt/O2_Bjørøya/currentmagic/currents_bjoroya_2m.nc");
+            cmf = new CurrentMagicFields("C:/Users/stein/Documents/01 Industriel kybernetikk/5. semester/Prosjektoppgave/Filer 03 aug/bjoroya_data.nc");
         }
+        //C:\Users\stein\Documents\01 Industriel kybernetikk\5. semester\Prosjektoppgave\Filer 03 aug
 
         boolean use3dBalancedCurrent = false; // Use Balanced3DHydraulics
 
@@ -101,7 +102,7 @@ public class RunSimulations {
         //boolean includeHypoxiaAvoidance = true;     int checkAvoidanceInterval = 30, checkAvoidanceCount = 0;
 
         // Simulation start time:
-        int initYear = 2022, initMonth = Calendar.JUNE, initDate = 27, initHour = 0, initMin = 0, initSec = 0;
+        int initYear = 2022, initMonth = Calendar.JUNE, initDate = 22, initHour = 0, initMin = 0, initSec = 0;
         double t_end = 1*24*3600;//1*24*3600; // Duration of simulation
         int nSim = 1; // Number of days to simulate (separate sims)
         int startAt = 0; // Set to >0 to skip one of more simulations, but count them in the sim numbering
@@ -109,8 +110,8 @@ public class RunSimulations {
         // Common settings:
         double rad = 25;
         double depth = 25, totDepth = 25; // Cage size (m)
-        double dxy = 2, dz = dxy; // Model resolution (m)
-        double dt = .5 * dxy; // Time step (s)
+        double dxy = 4, dz = dxy; // Model resolution (m) originally set to 2
+        double dt = 4 * dxy; // Time step (s) originally set to 0,5
         int storeIntervalFeed = 60, storeIntervalInfo = 60;
         double fishMaxDepth = 20; // The maximum depth of the fish under non-feeding conditions
 
@@ -292,7 +293,7 @@ public class RunSimulations {
 
             // Initialize environmental input data:
             //String inDataFile = "C:/Users/alver/OneDrive - NTNU/prosjekt/O2_Bjørøya/bjoroya_data.nc";
-            String inDataFile = "C:/Users/alver/OneDrive - NTNU/prosjekt/O2_Bjørøya/bjoroya_data.nc";
+            String inDataFile = "C:/Users/stein/Documents/01 Industriel kybernetikk/5. semester/Prosjektoppgave/Filer 03 aug/bjoroya_data.nc";
             if (!(new File(inDataFile)).exists())
                 inDataFile = "bjoroya_data.nc";
             InputDataNetcdf inData = new InputDataNetcdf(inDataFile, useInstantaneousAmbientVals);

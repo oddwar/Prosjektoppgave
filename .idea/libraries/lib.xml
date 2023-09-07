@@ -1,0 +1,17 @@
+<component name="libraryTable">
+  <library name="lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/mpj.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/netcdfAll-4.2.jar.zip!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jcommon-xml-1.0.23.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/ejml-ddense-0.42.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-math3-3.6.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/ejml-core-0.42.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/ftd2xxj-2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jcommon-1.0.23.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jfreechart-1.0.19.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
