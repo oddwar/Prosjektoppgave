@@ -111,7 +111,7 @@ public class RunSimStein {
         double rad = 25;
         double depth = 25, totDepth = 25; // Cage size (m)
         double dxy = 4, dz = dxy; // Model resolution (m) originally set to 2
-        double dt = 4 * dxy; // Time step (s) originally set to 0,5
+        double dt = 0.5 * dxy; // Time step (s) originally set to 0.5
         int storeIntervalFeed = 60, storeIntervalInfo = 60;
         double fishMaxDepth = 20; // The maximum depth of the fish under non-feeding conditions
 
