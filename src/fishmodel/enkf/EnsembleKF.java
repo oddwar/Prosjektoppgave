@@ -56,7 +56,7 @@ public class EnsembleKF {
         DMatrixRMaj X = CommonOps_DDRM.transpose(new DMatrixRMaj(dX), null);
         DMatrixRMaj X_twin = null;
 
-        // Measurements: There are two main modes of operation. If "includeTwin" is True, we are obtaining measuremens
+        // Measurements: There are two main modes of operation. If "includeTwin" is True, we are obtaining measurements
         // from a "twin" model running parallel to the ensemble. The set of states to measure is decided
         // by the measurement model provided by the measurements module.
         // If "useTwin" is False, we are using measurements loaded from file by the simInputsNetcdf module.

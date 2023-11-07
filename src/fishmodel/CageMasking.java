@@ -111,4 +111,48 @@ public class CageMasking {
 
         return mask;
     }
+
+
+    /**
+     * Create masking for a submerged cylindro-conical tank (typical fish cage shape).
+     * @param dims Grid dimensions
+     * @param dxy Horizontal grid size
+     * @param dz Vertical grid size
+     * @param radius Radius of cylindrical part
+     * @param cylDepth Depth of cylindrical part
+     * @param totDepth Depth of lowermost point of the cage
+     * @param topDepth Depth of top point of the cage
+     * @return
+     */
+    public static boolean[][][] cylindroConicalMaskingSubmerged(int[] dims, double dxy, double dz, double radius, double cylDepth, double totDepth, double topDepth) {
+        boolean[][][] mask = new boolean[dims[0]][dims[1]][dims[2]];
+        // Find center of grid:
+        double[] center = new double[2];
+        for (int i=0; i<2; i++)
+            center[i] = ((double)(dims[i]-1))/2.0;
+
+        for (int i=0; i<dims[0]; i++)
+            for (int j=0; j<dims[1]; j++) {
+                //horizontal part of tank
+                double distX = (double)i - center[0],
+                        distY = (double)j- center[1];
+                double rpos = dxy*Math.sqrt(distX*distX + distY*distY);
+                //Vertical part of tank
+                for (int k=0; k<dims[2]-1; k++) {
+                    double depth = k*dz;
+                    double rHere;
+                    if (topDepth < depth  && depth < cylDepth)
+                        rHere = radius;
+                    else if (topDepth < depth && depth < totDepth) {
+                        rHere = radius*(totDepth-depth)/(totDepth-cylDepth);
+                    }
+                    else rHere = 0;
+                    boolean inside = rHere > 0 && rpos <= rHere;
+                    mask[i][j][k] = inside;
+
+                }
+            }
+
+        return mask;
+    }
 }
