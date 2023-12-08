@@ -679,6 +679,7 @@ public class RunSimStein {
                         currentProfile[k][1] = tempCurrentProfile[k] * Math.sin(theta);
                     }
 
+
                     hydro = SimpleTankHydraulics.getProfileHydraulicField(cageDims, currentProfile);
                     currentReduction_3 = false;
                 }
