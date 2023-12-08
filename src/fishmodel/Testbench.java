@@ -5,7 +5,9 @@
  */
 
 package fishmodel;
-
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.DayOfWeek;
 import fishmodel.CageMasking;
 import fishmodel.Measurements;
 import fishmodel.enkf.AssimSettings;
@@ -41,50 +43,149 @@ import java.util.Random;
  * This file is made in order to test part of the code and different theories
  * first up is the currentprofile
  */
+
+import fishmodel.hydraulics.SimpleTankHydraulics;
+
 public class Testbench {
-
-    public static final double HYPOXIA_THRESHOLD = 6;
-
     public static LinearInterpolator interpol = new LinearInterpolator();
 
-    /**
-     * Setup for testing, remember to change filename
-     * test 3 - submerged, all values outside grid = NaN, maximizing number of fish, no current,
-     */
     public static void main(String[] args) {
 
-        String inDataFile = "C:/Users/stein/Documents/01 Industriel kybernetikk/5. semester/Prosjektoppgave/Filer 03 aug/bjoroya_data.nc";
-        boolean useInstantaneousAmbientVals = true; // true to use ambient value time series, false to use daily averages
 
-        int initYear = 2022, initMonth = Calendar.JUNE, initDate = 22, initHour = 10, initMin = 0, initSec = 10;
-        Calendar c = Calendar.getInstance();
 
-        c.set(initYear, initMonth, initDate, initHour, initMin, initSec);
-        //c.add(Calendar.DAY_OF_MONTH, 1);
-        Date startTime = c.getTime();
+        double[][][][] hydro;
+        double rad = 25;
+        double depth = 40;
+        double topOfCage = 0;
+        double cylDepth = 20;
+        double totDepth = 35; // Cage size (m)
+        double dxy = 2, dz = dxy; // Model resolution (m) originally set to 2
+        double dt = 0.5 * dxy; // Time step (s) originally set to 0.5
+        int storeIntervalFeed = 60, storeIntervalInfo = 60;
+        double fishMaxDepth = 35; // The maximum depth of the fish under non-feeding conditions
+        double currentSpeedInit = 1.0;
+        // Current profile from the Aquaexcel project
 
-        //------------------
-        InputDataNetcdf inData = new InputDataNetcdf(inDataFile, useInstantaneousAmbientVals);
-        inData.setStartTime(startTime);
-        double number = 5;
-        int multiplier = 10;
+        double[] low_current = {0.041 ,  0.03 ,  0.021 ,     0.015  ,  0.0145 ,   0.013  ,   0.012};
+        double[] current_depths = { 2.5 , 5 , 7.5   ,  12.5 , 17.5  , 27.5 ,  32.5};
 
-        double[] product = new double[multiplier]; // array with 10 elements
 
-        for (int i = 0; i < product.length; i++) {
-            product[i] = number;                    // replacing each element is 0
+
+        double modelDim = 2*(rad+8*dxy);
+        int[] cageDims = new int[3];
+        cageDims[0] = (int)Math.ceil(modelDim/dxy);
+        cageDims[1] = cageDims[0];
+        cageDims[2] = (int)Math.ceil(depth/dz)+1;
+
+        double[][] currentProfile = new double[cageDims[2]+1][3];
+        for (int i=0; i<cageDims[2]+1; i++) {
+
+            //updating currentprofile from 0 to CurrentSpeedInit
+            currentProfile[i][0] = currentSpeedInit;
         }
 
-        double[] obsCurrentDepths = inData.getCurrentDepths();
 
-        double[] obsCurrentProfile = inData.getExtCurrentSpeedProfile();
-        //System.out.println("current profile: ");
-        System.out.println("value: \n");
-        for (int i = 0; i < obsCurrentDepths.length; i++) {
-            System.out.print(obsCurrentDepths[i]+".\n" );
+        double[] tempCurrentProfile = new double[cageDims[2]+1];
+        interpolateVertical(tempCurrentProfile, current_depths, low_current, cageDims[2],dz);
+
+        double [][] newCurrentProfile = new double[cageDims[2]+1][3];
+
+        for (int i = 0; i< tempCurrentProfile.length;i++) {
+            newCurrentProfile[i][0] = tempCurrentProfile[i];
+
         }
+
+
+
+
+        hydro = SimpleTankHydraulics.getProfileHydraulicField(cageDims, newCurrentProfile);
+
+
+        //System.out.print(newCurrentProfile[0]);
+        for (int i=0; i<cageDims[2]+1; i++) {
+
+            //updating currentprofile from 0 to CurrentSpeedInit
+            System.out.println(newCurrentProfile[i][0]) ;
+        }
+
+        double per = 10.0;
+        double paal = 2 ;
+        System.out.println("lengde hydro: ");
+        //System.out.println(per/paal);
+
+        System.out.println(hydro.length);
+        System.out.println(hydro[0].length);
+        System.out.println(hydro[0][0].length);
+
+
+        for (int i=0; i<hydro[0][3].length; i++) {
+
+            //System.out.println(hydro[i][i][0][0]) ;
+            //System.out.println(hydro[0][i][0][0]) ;
+            //System.out.println(hydro[0][0][i][0]) ;//current
+            //System.out.println(hydro[0][0][0][i]) ;
+        }
+
+
+
+
+        //** Alternating the current after 6 hours = 21 600 sec
 
 
 
     }
+
+    /**
+
+
+
+
+
+
+
+     // Current profile from the Aquaexcel project
+     //Low_current =  [   4.1 ,   3 ,  2.1 ,     1.5  ,  1.45 ,   1.3  ,   1.2]
+     //current_depths = [- 2.5 , -5 , -7.5   ,  -12.5 , -17.5  , -27.5 ,  -32.5]
+*/
+    // interpolateVertical(affinityProfile, affDepths, affProfile, cageDims[2], dz);
+
+    public static void interpolateVertical(double[] res, double[] depths, double[] values, int kmax, double dz) {
+
+        double minDepth = depths[0], maxDepth = depths[depths.length-1],
+                topValue = values[0], bottomValue = values[values.length-1];
+        PolynomialSplineFunction interp = interpol.interpolate(depths, values);
+        for (int i=0; i<res.length; i++) {
+            double currDepth = ((double)i + 0.5)*dz;
+            if (currDepth < minDepth)
+                res[i] = topValue;
+            else if (currDepth > maxDepth)
+                res[i] = bottomValue;
+            else
+                res[i] = interp.value(currDepth);
+        }
+
+
+    }
+
+
+
+
+
+    /**
+     * Setup for testing, remember to change filename
+     * test 3 - submerged, all values outside grid = NaN, maximizing number of fish, no current,
+
+    public static void main(String[] args) {
+        LocalDate currentDate = LocalDate.now();
+        int year = currentDate.getYear();
+        Month month = currentDate.getMonth();
+        DayOfWeek day = currentDate.getDayOfWeek();
+        System.out.println("Årstall : " + year);
+        System.out.println("måned : " + month.toString());
+        System.out.println("dag : " + day.toString());
+
+    }
+    */
 }
+
+

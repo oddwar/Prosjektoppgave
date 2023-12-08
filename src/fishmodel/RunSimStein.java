@@ -38,7 +38,7 @@ import ucar.nc2.NetcdfFileWriteable;
  */
 public class RunSimStein {
 
-    public static final double HYPOXIA_THRESHOLD = 6;
+    public static final double HYPOXIA_THRESHOLD = 5.528; //threshold value for low oxygen values - using Scale AQs values for reference
 
     public static LinearInterpolator interpol = new LinearInterpolator();
 
@@ -51,7 +51,7 @@ public class RunSimStein {
 
         // Save files:
         String saveDir = "./";
-        String simNamePrefix = "Projectassignment-test5"; //"assim6_o2pert_lbeta_nopar_dropout";
+        String simNamePrefix = "Projectassignment-test12-current-"; //"assim6_o2pert_lbeta_nopar_dropout";
         String simNamePostfix = "";
 
         boolean doMPI = false; // Will be set to true if we are running is EnKF mode using MPI
@@ -86,7 +86,7 @@ public class RunSimStein {
  */
 
         // Simulation settings:
-        boolean maskO2WhenSaving = true;
+        boolean maskO2WhenSaving = false;
         boolean varyAmbient = true; // Reduction in ambient values towards the rest of the farm
         //double addRedMult = 0.65*0.015; // Scale factor for reduction in ambient values
 
@@ -109,38 +109,47 @@ public class RunSimStein {
 
         //boolean includeHypoxiaAvoidance = true;     int checkAvoidanceInterval = 30, checkAvoidanceCount = 0;
 
-        // Simulation start time:
+        // Simulation start time: Bjørøya
         int initYear = 2022, initMonth = Calendar.JUNE, initDate = 22, initHour = 0, initMin = 0, initSec = 0;
-
+        //int initYear = , initMonth = Calendar.JUNE, initDate = 22, initHour = 0, initMin = 0, initSec = 0;
 /**
  * Changing this during testing.
  * 17 hours first
  * lower resolution during testing
  *
  */
-        double t_end = 17*3600;//1*24*3600; // Duration of simulation //
+        double simHours = 20.;
+        double t_end = simHours*3600;//1*24*3600; // Duration of simulation //
         int nSim = 1; // Number of days to simulate (separate sims)
         int startAt = 0; // Set to >0 to skip one of more simulations, but count them in the sim numbering
 
         // Common settings:
         double rad = 25;
-        double depth = 60;
-        double topOfCage = 25;
-        double cylDepth = 45;
-        double totDepth = 60; // Cage size (m)
-        double dxy = 4, dz = dxy; // Model resolution (m) originally set to 2
-        double dt = 1 * dxy; // Time step (s) originally set to 0.5
+        double depth = 50;
+        double topOfCage = 12.5;
+        double cylDepth = 32.5;
+        double totDepth = 47.5; // Cage size (m)
+        double dxy = 2, dz = dxy; // Model resolution (m) originally set to 2
+        double dt = 0.5 * dxy; // Time step (s) originally set to 0.5 seconds
         int storeIntervalFeed = 60, storeIntervalInfo = 60;
-        double fishMaxDepth = 60; // The maximum depth of the fish under non-feeding conditions
+        double fishMaxDepth = 47.5; // The maximum depth of the fish under non-feeding conditions
+
+        //constant feeding added
+        double nominalFeedingRate = 12771.2*1000/(simHours*3600); // updated to 9 hours // Approximate feeding over 10 hours based on calculated data 1.3 % of fishweight and max biomass 982 400 kg, oppdatert fra 0.67% etter verdier fra Scale AQ
+                                                            // angis i antall gram
+
 
         double currentReductionFactor = (useCurrentMagic ? 1.0 : 0.8); // Multiplier for inside current
                                                                     // as function of outside
 
+
         // Environmental conditions:
-        double currentSpeedInit = 10.0; // External current speed (m/s) // = 0,02 knop, no current
-        double T_w = 16; double avO2 = 7.92; // water temp (celcius), and oxygen  (mg / l) (80%)
-        //double T_w = 16; double avO2 = 8*0.9612; // mg / l
-        //double T_w = 12; double avO2 = 8*1.0418; // mg / l
+        double currentSpeedInit = 0.125; // External current speed (m/s) // = 0,02 knop, no current. The current has upper bounds in this model
+        double T_w = 13;    // water temp (celcius),
+        //Todo make a formula depending on temperature and percentage
+        double avO2 = 7.776; //  oxygen  (mg / l)  should bee 90% saturation determined by temperature
+        double currentDirection = 25.; // direction of the current in degrees (0 - 360)
+        boolean daysToSimulate = false; //is the simulation running over several days
 
         // Oxygen diffusion constant (values updated further down)
         double diffKappaO2 = 0.1, diffKappaO2Z = 0.1;
@@ -149,13 +158,12 @@ public class RunSimStein {
         double[] currentOffset_r = new double[] {0,0,0}; // Perturbed global current vector
 
         // Fish setup (N, mean weight and std.dev weight):
-        double nFishBjoroya = 223109; // Estimated number of individuals in experimental period (source: FishTalk data)
-        double meanWeight = 5500.0; // Estimated mean weight in experimental period (source: FishTalk data) evt 4 000
+        double nFishBjoroya = 196480; // Biomass divided by 5 kg each salmon
+        double meanWeight = 5000.0; // Estimated maximum weight at the harvest
         double[] wFish = new double[] {meanWeight, 0.2*meanWeight};
         
         // Wind speed (x, y components in m/s) affecting feed spreader:
         double[] windSpeed = new double[] {0, 0};
-
         // Pellet setup:
         double[] sizes = new double[] {3, 6, 9, 12};
         double[] speeds = new double[] {0.0773, 0.0815, 0.1284, 0.1421};
@@ -185,13 +193,22 @@ public class RunSimStein {
         boolean useWalls = false;
         System.out.println("Domain dimensions: ("+cageDims[0]+", "+cageDims[1]+", "+cageDims[2]+")");
 
+        //todo adjust feeding position to submerged
+
         // Feeding setup:
         int[][] feedingPos = new int[][] {{cageDims[0]/2, cageDims[1]/2}};
         // Feeding periods (start/end in s):
         // Fra Eskil (Bjørøya): måltidene varte fra ca. kl. 07:30-17:30, i gjennomsnitt. Dette tilsvarer 7 dager med mating.
+
+        /**
         int[][] feedingPeriods = new int[][] {{27000, 63000}, {86400+27000, 86400+63000}, {2*86400+27000, 2*86400+63000},
                 {3*86400+27000, 3*86400+63000}, {4*86400+27000, 4*86400+63000}, {5*86400+27000, 5*86400+63000},
                 {6*86400+27000, 6*86400+63000}, {7*86400+27000, 7*86400+63000}};
+        */
+        int[][] feedingPeriods = new int[][] {{0, 10800}, {21600, 32400}, {43200, 54000},
+                {3*86400+27000, 3*86400+63000}, {4*86400+27000, 4*86400+63000}, {5*86400+27000, 5*86400+63000},
+                {6*86400+27000, 6*86400+63000}, {7*86400+27000, 7*86400+63000}};
+
         int nPeriods = feedingPeriods.length;
         for (int i=0; i<nPeriods; i++) {
             System.out.println("Feeding period "+(i+1)+": "+feedingPeriods[i][0]+" to "+feedingPeriods[i][1]);
@@ -212,7 +229,7 @@ public class RunSimStein {
         // Determine number of fish, and feeding rate:
         double nFish = nFishBjoroya;
         System.out.println("N fish = "+nFish);
-        double nominalFeedingRate = 2900.*1000/(10*3600); // Approximate feeding over 10 hours based on FishTalk data
+
         double feedingRateMult = 0; // Set each timestep
         System.out.println("Feeding rate = "+nominalFeedingRate);
 
@@ -230,18 +247,26 @@ public class RunSimStein {
         // O2 affinity (determines the typical vertical distribution of the fish):
         double[][][] o2Affinity = new double[cageDims[0]][cageDims[1]][cageDims[2]];
 
+        //todo Add depth adjustment to distribution of fish
+        double depthAdjustment = 1.;
         // Define vertical distribution based on telemetry data (from 8 individuals):
-        double[] affProfile_orig = new double[] {0.0110, 0.0913, 0.8601, 2.1406, 2.7774, 2.6903, 2.5195, 2.2987, 2.0137,
+        double[] affProfile_orig = new double[] {0.0110 , 0.0913 , 0.8601, 2.1406, 2.7774, 2.6903, 2.5195, 2.2987, 2.0137,
                 1.7448, 1.5883, 1.3667, 1.2348, 1.0724, 0.9379, 0.7764, 0.7104, 0.5895, 0.5607, 0.4668, 0.3933,
                 0.4009, 0.2935, 0.1801, 0.1260, 0.0787, 0.0457, 0.0304};
+
         double[] affProfile_flat = new double[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
         // Choose the flat or variable profile according to the "useVerticalDist" setting:
         double[] affProfile = useVerticalDist ? affProfile_orig : affProfile_flat;
         // Depths values for the values defined above:
-        double[] affDepths = new double[] {0.5000, 1.5000, 2.5000, 3.5000, 4.5000, 5.5000, 6.5000, 7.5000, 8.5000,
-                9.5000, 10.5000, 11.5000, 12.5000, 13.5000, 14.5000, 15.5000, 16.5000, 17.5000, 18.5000, 19.5000,
-                20.5000, 21.5000, 22.5000, 23.5000, 24.5000, 25.5000, 26.5000, 27.5000};
+        // distributing the fish
+
+        double depthDiff = topOfCage;
+        double[] affDepths = new double[] {0.5000+depthDiff, 1.5000+depthDiff, 2.5000+depthDiff, 3.5000+depthDiff, 4.5000+depthDiff, 5.5000+depthDiff,
+                6.5000+depthDiff, 7.5000+depthDiff, 8.5000+depthDiff, 9.5000+depthDiff, 10.5000+depthDiff, 11.5000+depthDiff, 12.5000+depthDiff,
+                13.5000+depthDiff, 14.5000+depthDiff, 15.5000+depthDiff, 16.5000+depthDiff, 17.5000+depthDiff, 18.5000+depthDiff, 19.5000+depthDiff,
+                20.5000+depthDiff, 21.5000+depthDiff, 22.5000+depthDiff, 23.5000+depthDiff, 24.5000+depthDiff, 25.5000+depthDiff, 26.5000+depthDiff,
+                27.5000+depthDiff};
         double[] affinityProfile = new double[cageDims[2]];
         interpolateVertical(affinityProfile, affDepths, affProfile, cageDims[2], dz);
 
@@ -294,16 +319,73 @@ public class RunSimStein {
             c.add(Calendar.DAY_OF_MONTH, sim);
             Date startTime = c.getTime();
 
+
+            if(sim==2 && sim !=1 && sim!=0 && daysToSimulate == true){
+                T_w = 8.0;
+                avO2 = 9.52; // 80% saturation at 8.0 celsius
+                // Set up array for ambient temperature:
+                for (int i = 0; i < ambientTemp.length; i++) {
+                    ambientTemp[i] = T_w;
+                }
+
+                for (int i = 0; i < ambientValueO2.length; i++) {
+                    ambientValueO2[i] = avO2;
+                }
+            }
+
             // Current field
             double[][][][] hydro;
-            // Here you set up the current profile (3D current vector per depth layer):
             double[][] currentProfile = new double[cageDims[2] + 1][3];
+
+            //**
+            // Current profile from the Aquaexcel project
+            double[] initialLowCurrent = {0.041, 0.03, 0.021, 0.015, 0.0145, 0.013, 0.012};
+            double[] currentDepths  = {2.5, 5, 7.5, 12.5, 17.5, 27.5, 32.5};
+            double[] lowCurrent = new double[initialLowCurrent.length];
+
+            double currentMult = currentSpeedInit/0.041;
+            double currentMult_2 = 0.88 * currentMult; // 11 cm/s
+            double currentMult_3 = 0.76 * currentMult; // 9,5 cm/s
+            double currentMult_4 = 0.64 * currentMult; // 8 cm/s
+            double currentMult_5 = 0.52 * currentMult; // 6,5 cm/s
+
+
+
+            for (int i = 0; i < initialLowCurrent.length; i++){
+                lowCurrent[i] = initialLowCurrent[i]*currentMult;
+            }
+
+
+
+            // Here you set up the current profile (3D current vector per depth layer):
+            // currentProfile[0] = x, currentProfile[1] = y currentProfile[2] = z
+
+            double [] tempCurrentProfile = new double[cageDims[2]+1];
+            interpolateVertical(tempCurrentProfile, currentDepths, lowCurrent, cageDims[2], dz);
+
+            // Due to numerical errors in the model it is best not to have current from a straight direction
+            double theta = currentDirection*Math.PI/180.;
+
+            for (int i = 0; i< tempCurrentProfile.length;i++) {
+                currentProfile[i][0] = tempCurrentProfile[i]*Math.cos(theta);
+                currentProfile[i][1] = tempCurrentProfile[i]*Math.sin(theta);
+            }
+
+            //*/
+
+            /** //original currentProfile
             for (int i=0; i<cageDims[2]+1; i++) {
 
-                currentProfile[i][0] = 0;
+                //updating currentprofile from 0 to CurrentSpeedInit
+                currentProfile[i][0] = currentSpeedInit;
             }
+            */
+
+
+            //Hydro is a 4-d matrix with current for x,y,z direction.
             hydro = SimpleTankHydraulics.getProfileHydraulicField(cageDims, currentProfile);
 
+            //Todo: Do i need this for two days of simulation?
             if (decreasingCurrentFactor)
                 currentReductionFactor = 0.8 + 0.05 - ((double)sim)*(0.2/*0.25*//8.0);
 
@@ -316,7 +398,7 @@ public class RunSimStein {
 
             // Initialize environmental input data:
             //String inDataFile = "C:/Users/alver/OneDrive - NTNU/prosjekt/O2_Bjørøya/bjoroya_data.nc";
-            String inDataFile = "C:/Users/stein/Documents/01 Industriel kybernetikk/5. semester/Prosjektoppgave/Filer 03 aug/bjoroya_data.nc";
+            String inDataFile = "C:/Users/stein/Documents/01 Industriel kybernetikk/5. semester/Prosjektoppgave/1. Simuleringer og plotting/bjoroya_data.nc";
             if (!(new File(inDataFile)).exists())
                 inDataFile = "bjoroya_data.nc";
             InputDataNetcdf inData = new InputDataNetcdf(inDataFile, useInstantaneousAmbientVals);
@@ -392,22 +474,32 @@ public class RunSimStein {
 
             double totFeedAdded = 0;
 
-            double currentDirection = 90;
+            //double currentDirection = 90;
             double currentSpeed = currentSpeedInit;
             double f_currentDir = Math.exp(-0.01*dt); // For simulating Gauss-Markov process
             double sigma_currentDir = 10;
 
+
             double t = 0;
             int n_steps = (int) (t_end / dt);
             long stime = System.currentTimeMillis();
+            boolean currentReduction_1 = true; // true - enables first current reduction
+            boolean currentReduction_2 = true;
+            boolean currentReduction_3 = true;
+            boolean currentReduction_4 = true;
+
+
+
+//--------- start of loop -------------------------------------------------------------------------------------------------------------
+
             for (int i = 0; i < n_steps; i++) {
 
                 //System.out.println("t = "+t);
                 double tMin = t / 60;
 
-  //**
+  /**
    //* Using manually entered data
-                //*/------------- vv Current magic vv --------------------------------------------------------------------------------------
+                //------------- vv Current magic vv --------------------------------------------------------------------------------------
                 //                  Noe er moffens her
 
                 if (inData.advance(t) || (i==0)) {
@@ -426,10 +518,10 @@ public class RunSimStein {
                     double profileValDir = currentDirection;
                     int profileMult = (int) totDepth ;
 
-                    //double[] obsCurrentProfile = inData.getExtCurrentSpeedProfile();
-                    double[] obsCurrentProfile = makeProfile(profileMult, profileValCur);
-                    //double[] obsCurrentDirProfile = inData.getExtCurrentDirProfile();
-                    double[] obsCurrentDirProfile = makeProfile(profileMult,profileValDir);
+                    double[] obsCurrentProfile = inData.getExtCurrentSpeedProfile();
+                    //double[] obsCurrentProfile = makeProfile(profileMult, profileValCur);
+                    double[] obsCurrentDirProfile = inData.getExtCurrentDirProfile();
+                    //double[] obsCurrentDirProfile = makeProfile(profileMult,profileValDir);
 
                     double[] obsCurrentComp1 = new  double[obsCurrentProfile.length],
                              obsCurrentComp2 = new  double[obsCurrentProfile.length];
@@ -438,6 +530,7 @@ public class RunSimStein {
                     // with the textual descriptions in the report by Aqua Kompetanse.
                     // x component: speed*sin(direction)
                     // y component: speed*cos(direction)
+
 
                     for (int j = 0; j < obsCurrentComp1.length; j++) {
                         double currentReductionFactorHere = currentReductionFactor;
@@ -454,28 +547,17 @@ public class RunSimStein {
                                 obsCurrentProfile[j]*Math.cos(obsCurrentDirProfile[j]*Math.PI/180.);
                     }
 
-                    //double[] obsCurrentDepths = inData.getCurrentDepths();
+                    double[] obsCurrentDepths = inData.getCurrentDepths();
                     // since the current is uniform the depth is irrelevant, it is relevant that it covers the full depth
 
-                    double[] obsCurrentDepths = makeDepthProfile(totDepth);
+                    //double[] obsCurrentDepths = makeDepthProfile(totDepth);
                     double[] interpProfile1 = new double[cageDims[2]],
                              interpProfile2 = new double[cageDims[2]];
                     interpolateVertical(interpProfile1, obsCurrentDepths, obsCurrentComp1, cageDims[2], dz);
                     interpolateVertical(interpProfile2, obsCurrentDepths, obsCurrentComp2, cageDims[2], dz);
 
 
-                /**
-                    System.out.println("interpolated Profile 1: \n");
-                    for (int j = 0; j < interpProfile1.length; j += 10) {
-                        System.out.println(interpProfile1[j] + " \n");
-                    }
 
-
-                    System.out.println("interpolated Profile 2: \n");
-                    for (int j = 0; j < interpProfile2.length; j += 10) {
-                        System.out.println(interpProfile2[j] + " \n");
-                    }
-                */
 
                     if (!useCurrentMagic) {
                         for (int j = 0; j < interpProfile1.length; j++) {
@@ -510,7 +592,7 @@ public class RunSimStein {
 
                     }
                 }
-  //*/------------- ^^ Current magic ^^ --------------------------------------------------------------------------------------
+  //*/ //------------- ^^ Current magic ^^ --------------------------------------------------------------------------------------
 
                 // Update variable current speed offset:
                 currentOffset[0] = 0.;//currentReductionFactor*currentSpeed*Math.cos(currentDirection*Math.PI/180.);
@@ -550,9 +632,81 @@ public class RunSimStein {
                     }
                 }*/
 
+                //** Alternating the current after 4 hours = 14 400 sec
+                if (currentReduction_1 && t/14400 == 1 ){
+
+                    //Run new current profile set up with reduction.
+                    for (int o = 0; o < initialLowCurrent.length; o++){
+                        lowCurrent[o] = initialLowCurrent[o]*currentMult_2; // 11cm/S
+                    }
+                    interpolateVertical(tempCurrentProfile, currentDepths, lowCurrent, cageDims[2], dz);
+                    for (int k = 0; k< tempCurrentProfile.length;k++) {
+                        currentProfile[k][0] = tempCurrentProfile[k]*Math.cos(theta);
+                        currentProfile[k][1] = tempCurrentProfile[k]*Math.sin(theta);
+                    }
+
+                    hydro = SimpleTankHydraulics.getProfileHydraulicField(cageDims, currentProfile);
+                    currentReduction_1 = false;
+                }
+
+                // Alternating the current after 8 hours = 28 800 sec
+                if (currentReduction_2 && t/28800 == 1 ){
+
+                    //Run new current profile set up with reduction.
+                    for (int o = 0; o < initialLowCurrent.length; o++){
+                        lowCurrent[o] = initialLowCurrent[o]*currentMult_3; // 9,5cm/S
+                    }
+                    interpolateVertical(tempCurrentProfile, currentDepths, lowCurrent, cageDims[2], dz);
+                    for (int k = 0; k< tempCurrentProfile.length;k++) {
+                        currentProfile[k][0] = tempCurrentProfile[k]*Math.cos(theta);
+                        currentProfile[k][1] = tempCurrentProfile[k]*Math.sin(theta);
+                    }
+
+                    hydro = SimpleTankHydraulics.getProfileHydraulicField(cageDims, currentProfile);
+                    currentReduction_2 = false;
+                }
+
+                // Alternating the current after 12 hours = 43 200 sec
+                if (currentReduction_3 && t/43200 == 1 ) {
+
+                    //Run new current profile set up with reduction.
+                    for (int o = 0; o < initialLowCurrent.length; o++) {
+                        lowCurrent[o] = initialLowCurrent[o] * currentMult_4; // 8 cm/s
+                    }
+                    interpolateVertical(tempCurrentProfile, currentDepths, lowCurrent, cageDims[2], dz);
+                    for (int k = 0; k < tempCurrentProfile.length; k++) {
+                        currentProfile[k][0] = tempCurrentProfile[k] * Math.cos(theta);
+                        currentProfile[k][1] = tempCurrentProfile[k] * Math.sin(theta);
+                    }
+
+                    hydro = SimpleTankHydraulics.getProfileHydraulicField(cageDims, currentProfile);
+                    currentReduction_3 = false;
+                }
+
+                // Alternating the current after 16 hours = 57 600 sec
+                if (currentReduction_4 && t/57600 == 1 ) {
+
+                    //Run new current profile set up with reduction.
+                    for (int o = 0; o < initialLowCurrent.length; o++) {
+                        lowCurrent[o] = initialLowCurrent[o] * currentMult_5; // 6.5 cm/s
+                    }
+                    interpolateVertical(tempCurrentProfile, currentDepths, lowCurrent, cageDims[2], dz);
+                    for (int k = 0; k < tempCurrentProfile.length; k++) {
+                        currentProfile[k][0] = tempCurrentProfile[k] * Math.cos(theta);
+                        currentProfile[k][1] = tempCurrentProfile[k] * Math.sin(theta);
+                    }
+
+                    hydro = SimpleTankHydraulics.getProfileHydraulicField(cageDims, currentProfile);
+                    currentReduction_4 = false;
+                }
+
+                    //*/
+
+
+
                 totFeedAdded += dt * feedingRateMult;
 
-                o2Cons_perturb_r = 0.;
+                o2Cons_perturb_r = 0.; //initially zero
 
                 // Perturb if we are using MPI, except if we are using a twin, and this is the twin, and the
                 // twin is not to be perturbed.
