@@ -38,20 +38,18 @@ import ucar.nc2.NetcdfFileWriteable;
  */
 public class RunSimStein {
 
-    public static final double HYPOXIA_THRESHOLD = 5.528; //threshold value for low oxygen values - using Scale AQs values for reference
+    public static final double HYPOXIA_THRESHOLD = 5.0976; //threshold value for low oxygen values - using Scale AQs values for reference 59% at 13 degrees
 
     public static LinearInterpolator interpol = new LinearInterpolator();
 
     /**
-     * Setup for testing, remember to change filename
-     * test 3 - submerged, all values outside grid = NaN, maximizing number of fish, no current,
-     *
+     * Setup for submergable seacage Scale AQ
      */
     public static void main(String[] args) {
 
         // Save files:
         String saveDir = "./";
-        String simNamePrefix = "Projectassignment-test12-current-"; //"assim6_o2pert_lbeta_nopar_dropout";
+        String simNamePrefix = "Projectassignment-test13-current-improved feeding-"; //"assim6_o2pert_lbeta_nopar_dropout";
         String simNamePostfix = "";
 
         boolean doMPI = false; // Will be set to true if we are running is EnKF mode using MPI
@@ -144,7 +142,7 @@ public class RunSimStein {
 
 
         // Environmental conditions:
-        double currentSpeedInit = 0.125; // External current speed (m/s) // = 0,02 knop, no current. The current has upper bounds in this model
+        double currentSpeedInit = 0.25; // External current speed (m/s) // = 0,02 knop, no current. The current has upper bounds in this model
         double T_w = 13;    // water temp (celcius),
         //Todo make a formula depending on temperature and percentage
         double avO2 = 7.776; //  oxygen  (mg / l)  should bee 90% saturation determined by temperature
@@ -158,7 +156,7 @@ public class RunSimStein {
         double[] currentOffset_r = new double[] {0,0,0}; // Perturbed global current vector
 
         // Fish setup (N, mean weight and std.dev weight):
-        double nFishBjoroya = 196480; // Biomass divided by 5 kg each salmon
+        double nFishInit = 196480; // Biomass divided by 5 kg each salmon
         double meanWeight = 5000.0; // Estimated maximum weight at the harvest
         double[] wFish = new double[] {meanWeight, 0.2*meanWeight};
         
@@ -205,7 +203,7 @@ public class RunSimStein {
                 {3*86400+27000, 3*86400+63000}, {4*86400+27000, 4*86400+63000}, {5*86400+27000, 5*86400+63000},
                 {6*86400+27000, 6*86400+63000}, {7*86400+27000, 7*86400+63000}};
         */
-        int[][] feedingPeriods = new int[][] {{0, 10800}, {21600, 32400}, {43200, 54000},
+        int[][] feedingPeriods = new int[][] {{0, 72000},
                 {3*86400+27000, 3*86400+63000}, {4*86400+27000, 4*86400+63000}, {5*86400+27000, 5*86400+63000},
                 {6*86400+27000, 6*86400+63000}, {7*86400+27000, 7*86400+63000}};
 
@@ -227,7 +225,7 @@ public class RunSimStein {
         }
 
         // Determine number of fish, and feeding rate:
-        double nFish = nFishBjoroya;
+        double nFish = nFishInit;
         System.out.println("N fish = "+nFish);
 
         double feedingRateMult = 0; // Set each timestep
@@ -344,10 +342,10 @@ public class RunSimStein {
             double[] lowCurrent = new double[initialLowCurrent.length];
 
             double currentMult = currentSpeedInit/0.041;
-            double currentMult_2 = 0.88 * currentMult; // 11 cm/s
-            double currentMult_3 = 0.76 * currentMult; // 9,5 cm/s
-            double currentMult_4 = 0.64 * currentMult; // 8 cm/s
-            double currentMult_5 = 0.52 * currentMult; // 6,5 cm/s
+            double currentMult_2 = 0.88 * currentMult; // 22 cm/s
+            double currentMult_3 = 0.76 * currentMult; // 19 cm/s
+            double currentMult_4 = 0.64 * currentMult; // 16 cm/s
+            double currentMult_5 = 0.52 * currentMult; // 13 cm/s
 
 
 

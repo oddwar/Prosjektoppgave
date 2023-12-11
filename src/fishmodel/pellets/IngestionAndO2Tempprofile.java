@@ -12,7 +12,9 @@ public class IngestionAndO2Tempprofile {
         c = 0.5; // Exponent for f_d factor
 
 
-    final static double o2consumptionMult = 1.2*1.3; // This factor can be used to globally multiply the o2 consumption of the fish.
+    final static double o2consumptionMult = 1.89; // This factor can be used to globally multiply the o2 consumption of the fish. original 1.2*1.3
+                                                  // fivelstad 5kg = 11.3120 Grøttum 5 kg = 5.9797 mult 5kg = 1.8917
+
 
     static double U = 1; // Swimming speed (body lengths/s)
 
@@ -160,10 +162,12 @@ public class IngestionAndO2Tempprofile {
                             betaBar[i][j][k] = (correction * cellIng[i][j][k] / totalIntake) * (1. - o2_even_fraction);
 
                             // Remove part (or all) of O2 consumption according to affinity:
+
                             betaBar[i][j][k] += (o2Affinity[i][j][k] / o2AffSum) * o2_even_fraction;
                         }
                         else {
                             // Remove part (or all) of O2 consumption according to affinity:
+
                             betaBar[i][j][k] += (o2Affinity[i][j][k] / o2AffSum);
                         }
                     }

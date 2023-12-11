@@ -12,7 +12,8 @@ public class IngestionAndO2 {
         c = 0.5; // Exponent for f_d factor
 
 
-    final static double o2consumptionMult = 1.3; // This factor can be used to globally multiply the o2 consumption of the fish.
+    final static double o2consumptionMult = 1.89; // This factor can be used to globally multiply the o2 consumption of the fish.
+                                                    // comparing this model to Fivelstads model i choose 1.89
 
     static double U = 1; // Swimming speed (body lengths/s)
 
