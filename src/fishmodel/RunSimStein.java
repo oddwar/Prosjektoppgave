@@ -85,7 +85,7 @@ public class RunSimStein {
 
         // Simulation settings:
         boolean maskO2WhenSaving = false;
-        boolean varyAmbient = true; // Reduction in ambient values towards the rest of the farm
+        boolean varyAmbient = false; // Reduction in ambient values towards the rest of the farm
         //double addRedMult = 0.65*0.015; // Scale factor for reduction in ambient values
 
         boolean decreasingCurrentFactor = true; // Model gradual decrease in current factor due to
@@ -142,7 +142,7 @@ public class RunSimStein {
 
 
         // Environmental conditions:
-        double currentSpeedInit = 0.25; // External current speed (m/s) // = 0,02 knop, no current. The current has upper bounds in this model
+        double currentSpeedInit = 0.20; // External current speed (m/s) // = 0,02 knop, no current. The current has upper bounds in this model
         double T_w = 13;    // water temp (celcius),
         //Todo make a formula depending on temperature and percentage
         double avO2 = 7.776; //  oxygen  (mg / l)  should bee 90% saturation determined by temperature
@@ -203,7 +203,7 @@ public class RunSimStein {
                 {3*86400+27000, 3*86400+63000}, {4*86400+27000, 4*86400+63000}, {5*86400+27000, 5*86400+63000},
                 {6*86400+27000, 6*86400+63000}, {7*86400+27000, 7*86400+63000}};
         */
-        int[][] feedingPeriods = new int[][] {{0, 72000},
+        int[][] feedingPeriods = new int[][] {{68400, 72000},
                 {3*86400+27000, 3*86400+63000}, {4*86400+27000, 4*86400+63000}, {5*86400+27000, 5*86400+63000},
                 {6*86400+27000, 6*86400+63000}, {7*86400+27000, 7*86400+63000}};
 
