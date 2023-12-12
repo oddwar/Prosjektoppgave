@@ -342,10 +342,10 @@ public class RunSimStein {
             double[] lowCurrent = new double[initialLowCurrent.length];
 
             double currentMult = currentSpeedInit/0.041;
-            double currentMult_2 = 0.88 * currentMult; // 22 cm/s
-            double currentMult_3 = 0.76 * currentMult; // 19 cm/s
-            double currentMult_4 = 0.64 * currentMult; // 16 cm/s
-            double currentMult_5 = 0.52 * currentMult; // 13 cm/s
+            double currentMult_2 = 0.8 * currentMult; // 22 cm/s
+            double currentMult_3 = 0.6 * currentMult; // 19 cm/s
+            double currentMult_4 = 0.4 * currentMult; // 16 cm/s
+            double currentMult_5 = 0.2 * currentMult; // 4 cm/s
 
 
 
