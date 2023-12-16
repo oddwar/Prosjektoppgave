@@ -36,15 +36,17 @@ import ucar.nc2.NetcdfFileWriteable;
  *
  * @author malv
  */
+
+/**
+ * Setup for submergable seacage Scale AQ - Specialization project TTK 4551
+ */
 public class RunSimStein {
 
     public static final double HYPOXIA_THRESHOLD = 5.0976; //threshold value for low oxygen values - using Scale AQs values for reference 59% at 13 degrees
 
     public static LinearInterpolator interpol = new LinearInterpolator();
 
-    /**
-     * Setup for submergable seacage Scale AQ
-     */
+
     public static void main(String[] args) {
 
         // Save files:
@@ -116,7 +118,7 @@ public class RunSimStein {
  * lower resolution during testing
  *
  */
-        double simHours = 20.;
+        double simHours = 8.;
         double t_end = simHours*3600;//1*24*3600; // Duration of simulation //
         int nSim = 1; // Number of days to simulate (separate sims)
         int startAt = 0; // Set to >0 to skip one of more simulations, but count them in the sim numbering
@@ -342,9 +344,9 @@ public class RunSimStein {
             double[] lowCurrent = new double[initialLowCurrent.length];
 
             double currentMult = currentSpeedInit/0.041;
-            double currentMult_2 = 0.8 * currentMult; // 22 cm/s
-            double currentMult_3 = 0.6 * currentMult; // 19 cm/s
-            double currentMult_4 = 0.4 * currentMult; // 16 cm/s
+            double currentMult_2 = 0.05 * currentMult; // 16 cm/s
+            double currentMult_3 = 0.6 * currentMult; // 12 cm/s
+            double currentMult_4 = 0.4 * currentMult; // 8 cm/s
             double currentMult_5 = 0.2 * currentMult; // 4 cm/s
 
 
