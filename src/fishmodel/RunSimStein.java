@@ -51,7 +51,7 @@ public class RunSimStein {
 
         // Save files:
         String saveDir = "./";
-        String simNamePrefix = "Projectassignment-test13-current-improved feeding-"; //"assim6_o2pert_lbeta_nopar_dropout";
+        String simNamePrefix = "Projectassignment-test13-alternating saturation with 8 hours?-"; //"assim6_o2pert_lbeta_nopar_dropout";
         String simNamePostfix = "";
 
         boolean doMPI = false; // Will be set to true if we are running is EnKF mode using MPI
@@ -118,7 +118,7 @@ public class RunSimStein {
  * lower resolution during testing
  *
  */
-        double simHours = 8.;
+        double simHours = 20.;
         double t_end = simHours*3600;//1*24*3600; // Duration of simulation //
         int nSim = 1; // Number of days to simulate (separate sims)
         int startAt = 0; // Set to >0 to skip one of more simulations, but count them in the sim numbering
@@ -205,7 +205,7 @@ public class RunSimStein {
                 {3*86400+27000, 3*86400+63000}, {4*86400+27000, 4*86400+63000}, {5*86400+27000, 5*86400+63000},
                 {6*86400+27000, 6*86400+63000}, {7*86400+27000, 7*86400+63000}};
         */
-        int[][] feedingPeriods = new int[][] {{68400, 72000},
+        int[][] feedingPeriods = new int[][] {{0, 72000},
                 {3*86400+27000, 3*86400+63000}, {4*86400+27000, 4*86400+63000}, {5*86400+27000, 5*86400+63000},
                 {6*86400+27000, 6*86400+63000}, {7*86400+27000, 7*86400+63000}};
 
@@ -344,7 +344,7 @@ public class RunSimStein {
             double[] lowCurrent = new double[initialLowCurrent.length];
 
             double currentMult = currentSpeedInit/0.041;
-            double currentMult_2 = 0.05 * currentMult; // 16 cm/s
+            double currentMult_2 = 0.8 * currentMult; // 16 cm/s
             double currentMult_3 = 0.6 * currentMult; // 12 cm/s
             double currentMult_4 = 0.4 * currentMult; // 8 cm/s
             double currentMult_5 = 0.2 * currentMult; // 4 cm/s
