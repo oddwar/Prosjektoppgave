@@ -39,6 +39,8 @@ import ucar.nc2.NetcdfFileWriteable;
 
 /**
  * Setup for submergable seacage Scale AQ - Specialization project TTK 4551
+ * By Stein Oddvar Sæthe
+ * @author oddwar
  */
 public class RunSimStein {
 
