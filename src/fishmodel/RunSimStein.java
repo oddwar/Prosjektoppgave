@@ -53,7 +53,7 @@ public class RunSimStein {
 
         // Save files:
         String saveDir = "./";
-        String simNamePrefix = "Projectassignment-test13-alternating saturation with 10 hours-"; //"assim6_o2pert_lbeta_nopar_dropout";
+        String simNamePrefix = "Projectassignment-test15-testing-stagnation-1m-"; //"assim6_o2pert_lbeta_nopar_dropout";
         String simNamePostfix = "";
 
         boolean doMPI = false; // Will be set to true if we are running is EnKF mode using MPI
@@ -127,7 +127,7 @@ public class RunSimStein {
         double topOfCage = 12.5;
         double cylDepth = 32.5;
         double totDepth = 47.5; // Cage size (m)
-        double dxy = 2, dz = dxy; // Model resolution (m) originally set to 2
+        double dxy = 1, dz = dxy; // Model resolution (m) originally set to 2
         double dt = 0.5 * dxy; // Time step (s) originally set to 0.5 seconds
         int storeIntervalFeed = 60, storeIntervalInfo = 60;
         double fishMaxDepth = 47.5; // The maximum depth of the fish under non-feeding conditions
