@@ -51,7 +51,7 @@ public class RunSimStein {
 
         // Save files:
         String saveDir = "./";
-        String simNamePrefix = "Projectassignment-test13-alternating saturation with 8 hours?-"; //"assim6_o2pert_lbeta_nopar_dropout";
+        String simNamePrefix = "Projectassignment-test13-alternating saturation with 10 hours-"; //"assim6_o2pert_lbeta_nopar_dropout";
         String simNamePostfix = "";
 
         boolean doMPI = false; // Will be set to true if we are running is EnKF mode using MPI
@@ -79,14 +79,10 @@ public class RunSimStein {
         }
         boolean isRoot = (rank==0); // For convenience, isRoot tells us if this is the rank 0 process.
 
-/**
- * Changing this during testing.
- *maskO2Whensaving = false
- * All values outside grid = NaN
- */
+
 
         // Simulation settings:
-        boolean maskO2WhenSaving = false;
+        boolean maskO2WhenSaving = true; // all oxygenvalues outside the fishcage is set to NaN when saving
         boolean varyAmbient = false; // Reduction in ambient values towards the rest of the farm
         //double addRedMult = 0.65*0.015; // Scale factor for reduction in ambient values
 
@@ -187,7 +183,7 @@ public class RunSimStein {
         boolean[][][] mask = null;
         //mask = CageMasking.circularMasking(cageDims, dxy, rad, false); // null
 
-        mask = CageMasking.cylindroConicalMaskingSubmerged(cageDims, dxy, dz, rad, cylDepth, totDepth, topOfCage);
+        mask = CageMasking.cylindroConicalMaskingSubmerged(cageDims, dxy, dz, rad, cylDepth, totDepth, topOfCage); //All cells inside the fishcage is set to true
         //                  cylindroConicalMaskingSubmerged(int[] dims, double dxy, double dz, double radius, double cylDepth, double totDepth, double topDepth) {
         //
         boolean useWalls = false;
@@ -347,7 +343,7 @@ public class RunSimStein {
             double currentMult_2 = 0.8 * currentMult; // 16 cm/s
             double currentMult_3 = 0.6 * currentMult; // 12 cm/s
             double currentMult_4 = 0.4 * currentMult; // 8 cm/s
-            double currentMult_5 = 0.2 * currentMult; // 4 cm/s
+            double currentMult_5 = 0.1 * currentMult; // 4 cm/s
 
 
 
@@ -632,7 +628,7 @@ public class RunSimStein {
                     }
                 }*/
 
-                //** Alternating the current after 4 hours = 14 400 sec
+                /** Alternating the current after 4 hours = 14 400 sec
                 if (currentReduction_1 && t/14400 == 1 ){
 
                     //Run new current profile set up with reduction.
@@ -649,8 +645,8 @@ public class RunSimStein {
                     currentReduction_1 = false;
                 }
 
-                // Alternating the current after 8 hours = 28 800 sec
-                if (currentReduction_2 && t/28800 == 1 ){
+                // Alternating the current after 4 hours = 28 800 sec
+                if (currentReduction_2 && t/28 800 == 1 ){
 
                     //Run new current profile set up with reduction.
                     for (int o = 0; o < initialLowCurrent.length; o++){
@@ -666,8 +662,10 @@ public class RunSimStein {
                     currentReduction_2 = false;
                 }
 
-                // Alternating the current after 12 hours = 43 200 sec
-                if (currentReduction_3 && t/43200 == 1 ) {
+                 **/
+                // Alternating the current after 10 min,
+                // hours = 43 200 sec
+                if (currentReduction_3 && t/600 == 1 ) {
 
                     //Run new current profile set up with reduction.
                     for (int o = 0; o < initialLowCurrent.length; o++) {
@@ -684,8 +682,9 @@ public class RunSimStein {
                     currentReduction_3 = false;
                 }
 
-                // Alternating the current after 16 hours = 57 600 sec
-                if (currentReduction_4 && t/57600 == 1 ) {
+                // Alternating the current after 10 hours
+                // 16 hours = 57 600 sec
+                if (currentReduction_4 && t/36000 == 1 ) {
 
                     //Run new current profile set up with reduction.
                     for (int o = 0; o < initialLowCurrent.length; o++) {
